@@ -1,4 +1,4 @@
-import { createRef, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 const items = Array.from({ length: 1_000 }, (_, index) => ({
   id: Math.random().toString(36).slice(2),
@@ -7,6 +7,7 @@ const items = Array.from({ length: 1_000 }, (_, index) => ({
 
 const itemHeight = 40;
 const containerHeight = 800;
+const overscan = 3
 
 export const DynamicHeight = () => {
   const [listItems, setListItems] = useState(items)
@@ -24,12 +25,27 @@ export const DynamicHeight = () => {
       setScrollTop(scrollTop)
     }
 
+    handleScroll()
+
     scrollElement.addEventListener('scroll', handleScroll)
 
     return () => scrollElement.removeEventListener('scroll', handleScroll)
   }, [])
 
-  console.log(scrollTop)
+  const range = useMemo(() => {
+    const rangeStart = scrollTop
+    const rangeEnd = scrollTop + containerHeight
+
+    let startIndex = Math.floor(rangeStart / itemHeight)
+    let endIndex = Math.ceil(rangeEnd / itemHeight)
+
+    startIndex = Math.max(0, startIndex - overscan)
+    endIndex = Math.min(items.length - 1, endIndex - overscan)
+
+    return [startIndex, endIndex]
+  }, [scrollTop, items.length])
+
+  console.log(range)
 
   return (
     <div style={{ padding: 12 }}>
