@@ -17,7 +17,7 @@ export const DynamicHeight = () => {
   useLayoutEffect(() => {
     const scrollElement = scrollElementRef.current
 
-    if(!scrollElement) return
+    if (!scrollElement) return
 
     const handleScroll = () => {
       const scrollTop = scrollElement.scrollTop
@@ -32,7 +32,7 @@ export const DynamicHeight = () => {
     return () => scrollElement.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const range = useMemo(() => {
+  const virtualItems = useMemo(() => {
     const rangeStart = scrollTop
     const rangeEnd = scrollTop + containerHeight
 
@@ -42,10 +42,19 @@ export const DynamicHeight = () => {
     startIndex = Math.max(0, startIndex - overscan)
     endIndex = Math.min(items.length - 1, endIndex - overscan)
 
-    return [startIndex, endIndex]
+    const virtualItems = []
+
+    for (let index = startIndex; index < endIndex; index++) {
+      virtualItems.push({
+        index,
+        offsetTop: index * itemHeight
+      })
+    }
+
+    return virtualItems
   }, [scrollTop, items.length])
 
-  console.log(range)
+  const totalListHeight = itemHeight * listItems.length
 
   return (
     <div style={{ padding: 12 }}>
@@ -61,23 +70,31 @@ export const DynamicHeight = () => {
         style={{
           height: containerHeight,
           overflow: 'auto',
-          border: '1px solid lightgrey'
+          border: '1px solid lightgrey',
+          position: 'relative'
         }}
         ref={scrollElementRef}
       >
-        {listItems.map((item) => {
-          return (
-            <div
-              style={{
-                height: itemHeight,
-                padding: '6px 12px'
-              }}
-              key={item.id}
-            >
-              {item.text}
-            </div>
-          )
-        })}
+        <div style={{ height: totalListHeight }}>
+          {virtualItems.map(({ index, offsetTop }) => {
+            const item = listItems[index]!
+
+            return (
+              <div
+                style={{
+                  height: itemHeight,
+                  padding: '6px 12px',
+                  position: 'absolute',
+                  top: 0,
+                  transform: `translateY(${offsetTop}px)`
+                }}
+                key={item.id}
+              >
+                {item.text}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   );
