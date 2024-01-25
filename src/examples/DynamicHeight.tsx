@@ -1,4 +1,4 @@
-import { createRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 const items = Array.from({ length: 1_000 }, (_, index) => ({
   id: Math.random().toString(36).slice(2),
@@ -40,11 +40,11 @@ export const DynamicHeight = () => {
     let endIndex = Math.ceil(rangeEnd / itemHeight)
 
     startIndex = Math.max(0, startIndex - overscan)
-    endIndex = Math.min(items.length - 1, endIndex - overscan)
+    endIndex = Math.min(items.length - 1, endIndex + overscan)
 
     const virtualItems = []
 
-    for (let index = startIndex; index < endIndex; index++) {
+    for (let index = startIndex; index <= endIndex; index++) {
       virtualItems.push({
         index,
         offsetTop: index * itemHeight
