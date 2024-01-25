@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 const items = Array.from({ length: 1_000 }, (_, index) => ({
   id: Math.random().toString(36).slice(2),
@@ -8,10 +8,12 @@ const items = Array.from({ length: 1_000 }, (_, index) => ({
 const itemHeight = 40;
 const containerHeight = 800;
 const overscan = 3
+const scrollingDelay = 100
 
 export const DynamicHeight = () => {
   const [listItems, setListItems] = useState(items)
   const [scrollTop, setScrollTop] = useState(0)
+  const [isScrolling, setIsScrolling] = useState(false)
   const scrollElementRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
@@ -30,6 +32,36 @@ export const DynamicHeight = () => {
     scrollElement.addEventListener('scroll', handleScroll)
 
     return () => scrollElement.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const scrollElement = scrollElementRef.current
+
+    if (!scrollElement) return
+
+    let timerId: number | null = null
+
+    const handleScroll = () => {
+      setIsScrolling(true)
+
+      if (typeof timerId === 'number') {
+        clearTimeout(timerId)
+      }
+
+      timerId = setTimeout(() => {
+        setIsScrolling(false)
+      }, scrollingDelay)
+    }
+
+    scrollElement.addEventListener('scroll', handleScroll)
+
+    return () => {
+      if (typeof timerId === 'number') {
+        clearTimeout(timerId)
+      }
+
+      scrollElement.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   const virtualItems = useMemo(() => {
@@ -90,7 +122,7 @@ export const DynamicHeight = () => {
                 }}
                 key={item.id}
               >
-                {item.text}
+                {isScrolling ? 'Scrolling...' : item.text}
               </div>
             )
           })}
